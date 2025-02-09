@@ -1,0 +1,38 @@
+version: "3.8"
+services:
+  nginx:
+    image: nginx:latest
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx/conf.d:/etc/nginx/conf.d  # Configuración de Nginx
+      - ./src/html:/var/www/html          # Archivos estáticos
+    depends_on:
+      - php
+      - db
+
+  php:
+    image: php:8-fpm
+    volumes:
+      - ./src/php:/var/www/html           # Código PHP
+    environment:
+      - DB_HOST=db
+      - DB_USER=root
+      - DB_PASSWORD=secret
+
+  db:
+    image: mariadb:latest
+    environment:
+      MYSQL_ROOT_PASSWORD: secret
+      MYSQL_DATABASE: mi_db
+    volumes:
+      - ./database:/docker-entrypoint-initdb.d  # Scripts SQL iniciales
+
+  chat:
+    image: node:18
+    working_dir: /app
+    volumes:
+      - ./src/chat:/app                     # Código del chat (WebSocket)
+    ports:
+      - "3000:3000"
+    command: ["npm", "start"]
